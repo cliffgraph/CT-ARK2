@@ -2,7 +2,7 @@
 by Harumakkin. 2026/07/02
 
 ![ct-ark-04a](docs/pics/ct-ark2-form1.jpg)  
-**fig.1 CT-ARK2-03A**
+**fig.1 CT-ARK2**
 
 ## CT-ARK2って何？
 - CT-ARK2は、microSDカードを実装したMSX用ROMカートリッジエミュレータです。
@@ -116,11 +116,11 @@ E-Paperに使用できる.BMPファイルは、横幅128ピクセル、縦幅296
 
 ## CT-ARK2を作る
 部品表にある部品の収集、プリント基板の製造、組み立て、ファームウェアの書き込みの作業が必要です。完成品はありません。 PCBを発注できて、表面実装部品をはんだ付けできて、RP2350にu2fファイルを書き込みができる必要があります。
-- 部品表（CT-ARK2-03A_partslist.xlsx）
-- 回路図（schematic_CT-ARK2-03A.pdf）
-- ガーバーデータ(gerber_CT-ARK2-03A.zip)
+- 部品表（CT-ARK2-06A_partslist.xlsx）
+- 回路図（schematic_CT-ARK2-06A.pdf）
+- ガーバーデータ(gerber_CT-ARK2-06A.zip)
 - microSDカード
-- RP2350B ファームウェア ct-ark2.vXX.uf2
+- RP2350B ファームウェア ct-ark2.uf2
 - CT-ARK2 MENU プログラム ct-ark2.sys
 
 ## CT-ARK2を使う
