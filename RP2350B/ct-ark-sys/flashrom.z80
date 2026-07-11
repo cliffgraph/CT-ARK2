@@ -1,0 +1,256 @@
+﻿; MSX用カートリッジ64K Simple ROM Cartridge 
+; SST39SF010A
+; https://github.com/v9938/MSX_SimpleCartridge
+; https://www.kadenken.com/view/item/000000001288
+
+; B_RDSLT				equ 0x000C
+; B_WRSLT				equ 0x0014
+; W_JIFFY				equ	0xFC9E
+
+;====================================================
+; Reset FlashROM
+;====================================================
+SST39SF010A_1ST2ND_CYCLE:
+	.start
+		ld		A, 0x02		; slot-2
+		ld		HL, 0x5555
+		ld		E, 0xaa
+		call	B_WRSLT
+		;
+		ld		A, 0x02
+		ld		HL, 0x2aaa
+		ld		E, 0x55
+		call	B_WRSLT
+		;
+		ret
+
+;====================================================
+; Check FlashROM
+;====================================================
+SST39SF010A_CHECK:
+	; @return H=MakerID,L=DeviceID
+	.start
+		di
+		;
+		call	SST39SF010A_1ST2ND_CYCLE
+		ld		A, 0x02
+		ld		HL, 0x5555
+		ld		E, 0x90
+		call	B_WRSLT
+		;
+		ld		A, 0x02
+		ld		HL, 0x4000
+		call	B_RDSLT
+		push	AF
+		ld		A, 0x02
+		ld		HL, 0x4001
+		call	B_RDSLT
+		ld		L, A
+		pop		AF
+		ld		H, A
+		push	HL
+		;
+		call	SST39SF010A_1ST2ND_CYCLE
+		ld		A, 0x02
+		ld		HL, 0x5555
+		ld		E, 0xF0
+		call	B_WRSLT
+		;
+		ei
+		pop		HL
+		ret
+
+;====================================================
+; Erase FlashROM contents(Chip Earse)
+;====================================================
+SST39SF010A_CHIPERASE:
+	.start
+		di
+		;
+		call	SST39SF010A_1ST2ND_CYCLE
+		;
+		ld		A, 0x02
+		ld		HL, 0x5555
+		ld		E, 0x80
+		call	B_WRSLT
+		;
+		call	SST39SF010A_1ST2ND_CYCLE
+		;
+		ld		A, 0x02
+		ld		HL, 0x5555
+		ld		E, 0x10
+		call	B_WRSLT
+		;
+		ei
+
+	; 約100ms 待つ!
+		ld		A, 0x07		;16.6ms x 7 = 116.2ms
+		call	SST39SF010A_WAIT_MS
+		ret
+
+;====================================================
+; Erase FlashROM contents(0000-FFFF)
+;====================================================
+; @param reg.H(ssss0000b: ssssb=sector number 0-11)
+;	12以降はBIOSの仕組み上不可能
+SST39SF010A_SECTORERASE:
+	.start
+		di
+		push	HL
+		;
+		call	SST39SF010A_1ST2ND_CYCLE
+		;
+		ld		A, 0x02
+		ld		HL, 0x5555
+		ld		E, 0x80
+		call	B_WRSLT
+		;
+		call	SST39SF010A_1ST2ND_CYCLE
+		;
+		pop		HL			; H(ssss0000b) セクタ番号
+		ld		L, 0
+		ld		A, 0x02
+		ld		E, 0x30
+		call	B_WRSLT
+		;
+		ei
+	; 約25ms 待つ!
+		ld		A, 0x03		;16.6ms x 3 = 49.5ms
+		call	SST39SF010A_WAIT_MS
+		ret
+
+
+SST39SF010A_SECTORERASE_P3:
+	.start
+		di
+		push	HL
+		;
+		call	SST39SF010A_1ST2ND_CYCLE
+		;
+		ld		A, 0x02
+		ld		HL, 0x5555
+		ld		E, 0x80
+		call	B_WRSLT
+		;
+		call	SST39SF010A_1ST2ND_CYCLE
+		;
+		pop		HL			; H(ssss0000b) セクタ番号
+		ld		D, H
+
+		; page3の場合はスタックエリアを別の場所に移動する
+		ld		HL, 0
+		add		HL, SP
+		ld		(LOCALSTACK.save), HL
+		ld		SP, LOCALSTACK.bottom
+
+		; 書込み
+		ld		H, D
+		ld		L, 0
+		ld		A, 0x30
+		call	WR_SLT2_P3	; slot2.[HL] <- A
+
+		;スタック領域を本来の位置に戻す
+		ld		HL, (LOCALSTACK.save)
+		ld		SP, HL
+		;
+		ei
+	; 約25ms 待つ!
+		ld		A, 0x03		;16.6ms x 3 = 49.5ms
+		call	SST39SF010A_WAIT_MS
+		ret
+
+
+;====================================================
+; Write to FlashROM
+;====================================================
+SST39SF010A_WRITE:
+	; @param HL:dest, E:value
+	.start
+		di
+		;
+		push	HL
+		push	DE
+		call	SST39SF010A_1ST2ND_CYCLE
+		ld		A, 0x02
+		ld		HL, 0x5555
+		ld		E, 0xA0
+		call	B_WRSLT
+		pop		DE
+		pop		HL
+		;
+		push	DE
+		ld		A, 0x02
+		call	B_WRSLT
+		pop		DE
+		;
+	.verify
+		push	DE
+		ld		A, 0x02
+		call	B_RDSLT
+		pop		DE
+		cp		E
+		jr		nz, .verify
+		;
+		ei
+	.end
+		ret
+
+SST39SF010A_WRITE_P3:
+	; @param HL:dest, E:value
+	.start
+		di
+		ld		(.workdw_hl), HL
+		ld		(.workdw_de), DE
+		call	SST39SF010A_1ST2ND_CYCLE
+		ld		A, 0x02
+		ld		HL, 0x5555
+		ld		E, 0xA0
+		call	B_WRSLT
+
+	.write
+		; page3の場合はスタックエリアを別の場所に移動する
+		ld		HL, 0
+		add		HL, SP
+		ld		(LOCALSTACK.save), HL
+		ld		SP, LOCALSTACK.bottom
+
+		;
+		ld		DE, (.workdw_de)
+		ld		A, E
+		ld		HL, (.workdw_hl)
+		call	WR_SLT2_P3	; slot2.[HL] <- A
+
+	.verify
+		;
+		ld		HL, (.workdw_hl)
+		call	RD_SLT2_P3	; A <- slot2.[HL]
+		;
+		ld		DE, (.workdw_de)
+		cp		E
+		jr		nz, .verify
+
+		;スタック領域を本来の位置に戻す
+		ld		HL, (LOCALSTACK.save)
+		ld		SP, HL
+		ld		HL, (.workdw_hl)
+		ei
+	.end
+		ret
+	.workdw_hl	
+		dw		0
+	.workdw_de
+		dw		0
+
+
+;====================================================
+; Write to FlashROM
+;====================================================
+SST39SF010A_WAIT_MS:
+; @param @reg.A tick(1=16.6ms)
+	.start
+		ld		HL, W_JIFFY
+		add		A, (HL)
+	.@1
+		cp		(HL)
+		jr		nz, .@1
+		ret
