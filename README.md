@@ -217,5 +217,17 @@ MENU画面が表示されずBASICが立ち上がる、MSX2+以降で起動した
 FatFs
 Copyright (C) 20xx, ChaN, all right reserved. http://elm-chan.org/fsw/ff/00index_e.html
 
+## CT-ARK シリーズの紹介
+CT-ARK2以前に、CT-ARK、CT-ARK-PICO2、の２世代が存在します。特徴は下記の通り、性能差はもう忘れてしまいました。現在に至ってはCT-ARK、CT-ARK-PICO2は存在意義はもうありません。
+
+|name|Features|github|
+|:-|:-|:-|
+|CT-ARK|RaspberryPiPico(RP2030+4MB-ROM)使用|https://github.com/cliffgraph/CT-ARK|
+|CT-ARK-PICO2|RaspberryPiPico2(RP2350+4MB-ROM)使用|https://github.com/cliffgraph/CT-ARK-PICO2|
+|CT-ARK2|WAVESHARE-31692(RP2350+16MB-ROM)、E-Paper|https://github.com/cliffgraph/CT-ARK2|
+
+あと、似たようなモノに **MGS-ARK**というMGSPICOとCT-ARKの合の子という異色作もありますが、これは設計を公開していません。
+https://x.com/Harumakkin/status/1776449068912537909
+
 
 
